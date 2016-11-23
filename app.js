@@ -1,15 +1,26 @@
-require('dotenv').config();
 var express = require('express');
 var app = express();
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
 
-app.use('/', express.static('public'));
+server.listen(3000);
 
-app.get('/message', function (req, res) {
-	res.send(process.env.MESSAGE);
+app.use('/', express.static('.'));
+
+function getQuery(req) {
+	return req.url.split('?').slice(1).join();
+}
+
+app.get('/add', function (req, res) {
+	res.end();
+	var query = getQuery(req);
+	console.log(query);
+	io.emit('add', query);
 });
 
-var server = app.listen(process.env.PORT || 3000, function () {
-	var host = server.address().address;
-	var port = server.address().port;
-	console.log('Example app listening at http://%s:%s', host, port);
+io.on('connection', function (socket) {
+  socket.emit('hello', { from: 'backend' });
+  socket.on('hello', function (data) {
+    console.log(data);
+  });
 });
